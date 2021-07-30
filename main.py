@@ -28,7 +28,7 @@ async def on_message(message):
         await channel.send(new_guy.print_stats())
     
     if content.startswith("$exterminatus"):
-        if message.user.id == config.admin_id:
+        if message.author.id == config.admin_id:
             await channel.purge()
             await channel.send("*The channel has been purged.*")
         else:
