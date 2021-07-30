@@ -1,5 +1,7 @@
 import os
-from discord import send
+import discord
+
+from character import Character
 
 class State_Manager:
     def __init__(self):
@@ -39,8 +41,28 @@ class State_Manager:
 
         return "Updated alias list at alias.txt!"
 
+    # Takes a command, parses it, does the appropriate thing
     async def handle_command(self, message):
+        
         content = message.content
+        channel = message.channel
+
+        if content.startswith("$create"):
+            content = content.replace("$create ", "")
+            if content == "":
+                content = "New Guy"
+
+            new_guy = Character(content)
+            new_guy.generate_characteristics(0)
+
+            await channel.send(new_guy.print_stats())
+        
+        if content.startswith("$exterminatus"):
+            if message.author.id == config.admin_id:
+                await channel.purge()
+                await channel.send("*The channel has been purged.*")
+            else:
+                await channel.send("That's heresy!")
 
         if content.startswith('$register'):
             # retrieve Discord name and given name from message

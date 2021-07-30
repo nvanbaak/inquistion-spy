@@ -2,8 +2,10 @@ import discord
 import config
 
 from character import Character
+from state_manager import State_Manager
 
 client = discord.Client()
+sm = State_Manager()
 
 @client.event
 async def on_ready():
@@ -13,26 +15,6 @@ async def on_ready():
 async def on_message(message):
     if message.content.startswith("$"):
         print(message)
-
-    content = message.content
-    channel = message.channel
-
-    if content.startswith("$create"):
-        content = content.replace("$create ", "")
-        if content == "":
-            content = "New Guy"
-
-        new_guy = Character(content)
-        new_guy.generate_characteristics(0)
-
-        await channel.send(new_guy.print_stats())
-    
-    if content.startswith("$exterminatus"):
-        if message.author.id == config.admin_id:
-            await channel.purge()
-            await channel.send("*The channel has been purged.*")
-        else:
-            await channel.send("That's heresy!")
-
+        await sm.handle_command(message)
 
 client.run(config.bot_token)
