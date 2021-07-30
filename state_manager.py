@@ -1,5 +1,6 @@
 import os
 import discord
+import config
 
 from character import Character
 
