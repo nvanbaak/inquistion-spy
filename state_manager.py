@@ -1,12 +1,17 @@
 import os
 from random import randrange
 import discord
+
 import config
+from dice_engine import Dice_Roller
 
 from character import Character
 
 class State_Manager:
     def __init__(self):
+
+        # create dice roller instance
+        self.dice_roller = Dice_Roller()
 
         # alias setup
         self.aliases = {}
@@ -80,59 +85,7 @@ class State_Manager:
             content = content.replace("$roll ","")
             content = content.replace("$roll","")
 
-            # Expunge spaces around operators
-            content = content.replace(" + ","+")
-            content = content.replace(" +","+")
-            content = content.replace("+ ","+")
-
-            content = content.replace(" - ","-")
-            content = content.replace(" -","-")
-            content = content.replace("- ","-")
-
-            content = content.split("+")
-
-            dice_results = []
-            total = 0
-
-            for term in content:
-
-                # if it's a constant, we just add it; else parse as die roll
-                try:
-                    total += int(term)
-                except ValueError:
-
-                    roll = term.split("d",1)
-
-                    if len(roll) > 1:
-                        rolls_completed = 0
-
-                        # Check that inputs are valid
-                        try:
-                            int(roll[0])
-                        except ValueError:
-                            await channel.send("Heresy! '{}' is not a valid number of rolls!".format(roll[0]))
-                            return
-                        try:
-                            int(roll[1])
-                        except ValueError:
-                            await channel.send("Heresy! '{}' is an invalid die type!".format(roll[1]))
-                            return
-
-                        # Roll the specified number of times
-                        while rolls_completed < int(roll[0]):
-                            result = randrange(1, int(roll[1])+1)
-                            dice_results.append(result)
-                            rolls_completed += 1
-
-            output_str = "**Roll result:** \n **]|[**"
-
-            for result in dice_results:
-                total += result
-                output_str += " {},".format(result)
-
-            # Delete the comma at the end of the list
-            output_str = output_str[:-1]
-            output_str += " **]|[**\n**Total:** {}".format(total)
+            self.dice_roller.parse_command(content,channel)
 
             await channel.send(output_str)
             return
