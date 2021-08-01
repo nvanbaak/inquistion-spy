@@ -101,7 +101,7 @@ class State_Manager:
                     total += int(term)
                 except ValueError:
 
-                    roll = term.split("d")
+                    roll = term.split("d",1)
 
                     if len(roll) > 1:
                         rolls_completed = 0
@@ -118,18 +118,21 @@ class State_Manager:
                             await channel.send("Heresy! '{}' is an invalid die type!".format(roll[1]))
                             return
 
+                        # Roll the specified number of times
                         while rolls_completed < int(roll[0]):
-                            result = randrange(1, int(roll[1]))
+                            result = randrange(1, int(roll[1])+1)
                             dice_results.append(result)
                             rolls_completed += 1
 
-            output_str = "Roll result: \n ]|["
+            output_str = "**Roll result:** \n **]|[**"
 
             for result in dice_results:
                 total += result
                 output_str += " {},".format(result)
 
-            output_str += "]|[\nTotal: {}".format(total)
+            # Delete the comma at the end of the list
+            output_str = output_str[:-1]
+            output_str += " **]|[**\n**Total:** {}".format(total)
 
             await channel.send(output_str)
             return
