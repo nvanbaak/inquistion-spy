@@ -85,7 +85,7 @@ class State_Manager:
             content = content.replace("$roll ","")
             content = content.replace("$roll","")
 
-            self.dice_roller.parse_command(content,channel)
+            await self.dice_roller.parse_command(content,channel)
 
             return
 

@@ -18,9 +18,16 @@ class Dice_Roller:
             raise TypeError("Empty argument")
 
         # Check that no illegal characters are used
-        result = re.compile("[0-9|d|+|-]*")
-        if not result.fullmatch(command):
+        character_check = re.compile("[0-9|d|+|-]*")
+        if not character_check.fullmatch(command):
             raise ValueError("Illegal characters")
+        
+        # Check that all 'd' terms have nonzero adjacent numbers
+        zero_rolls_check = re.compile("(^0|[+]0|-0)d")
+        d_zeroes_check = re.compile("d(0$|0[+]|0-)")
+
+        if zero_rolls_check.search(command) or d_zeroes_check.search(command):
+            raise ValueError("Dices rolls must have positive values!")
 
         return command
 
@@ -28,9 +35,9 @@ class Dice_Roller:
     # mode is 1 for addition and -1 for subtraction
     # roll_results is a reference to a list of roll results
     def ndn_roll(self, roll_code, mode, roll_results):
-        roll = roll_code.split("d",1)
+        roll = roll_code.split("d")
 
-        if len(roll) > 1:
+        if int(roll[0]) > 0 and int(roll[1]) > 0:
             rolls_completed = 0
 
             # Roll the specified number of times
@@ -38,17 +45,22 @@ class Dice_Roller:
                 result = randrange(1, int(roll[1])+1)
                 roll_results.append(result * mode)
                 rolls_completed += 1
+        else:
+            raise ValueError("Can't roll 0 dice or d0s1")
         return 
 
-    def parse_roll_term(self, term, mode, roll_results):
+    async def parse_roll_term(self, term, mode, roll_results, channel):
 
         if "d" in term:
-            self.ndn_roll(term, mode, roll_results)
-            return 0
+            try:
+                self.ndn_roll(term, mode, roll_results)
+                return 0
+            except ValueError:
+                await channel.send("Treason!  Dice terms must have both a number of rolls and a number of sides!")
         else:
             return int(term) * mode
 
-    async def parse_command(self, channel, command):
+    async def parse_command(self, command, channel):
 
         try:
             command = self.sanitize_command(command)
@@ -56,7 +68,7 @@ class Dice_Roller:
             await channel.send("Heresy! Empty roll command!")
             return
         except ValueError:
-            await channel.send("Heresy! Illegal characters in roll command!")
+            await channel.send("Missing or heretical characters in roll command!")
             return
 
         # Sanitizing ensures there are no characters but numbers, operators, and "d"
@@ -69,22 +81,25 @@ class Dice_Roller:
         for top_term in command:
 
             # first check if there are subtraction terms to split off
-            if "-" in top_term:
-                top_term = top_term.split("-")
+            try:
+                if "-" in top_term:
+                    top_term = top_term.split("-")
 
-                index = len(top_term)
+                    index = len(top_term) - 1
 
-                # add first term
-                total += self.parse_roll_term(top_term[0],1,dice_results)
+                    # add first term
+                    total += await self.parse_roll_term(top_term[0],1,dice_results, channel)
 
-                # subtract the rest
-                while index > 0:
+                    # subtract the rest
+                    while index > 0:
 
-                    total += self.parse_roll_term(top_term[index],-1,dice_results)
-                    index -= 1
+                        total += await self.parse_roll_term(top_term[index],-1,dice_results, channel)
+                        index -= 1
 
-            else: # if not, add this term and we're done
-                total += self.parse_roll_term(top_term,1,dice_results)
+                else: # if not, add this term and we're done
+                    total += await self.parse_roll_term(top_term,1,dice_results, channel)
+            except TypeError:
+                return
 
         # set up output
         output_str = "**Roll result:** \n **]|[**"
