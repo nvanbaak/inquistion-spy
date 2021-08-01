@@ -76,37 +76,63 @@ class State_Manager:
 
         elif content.startswith("$roll"):
 
+            # Remove command term
             content = content.replace("$roll ","")
+            content = content.replace("$roll","")
 
-            content = content.split(" ")
+            # Expunge spaces around operators
+            content = content.replace(" + ","+")
+            content = content.replace(" +","+")
+            content = content.replace("+ ","+")
+
+            content = content.replace(" - ","-")
+            content = content.replace(" -","-")
+            content = content.replace("- ","-")
+
+            content = content.split("+")
 
             dice_results = []
             total = 0
 
-
             for term in content:
-                roll = term.split("d")
 
-                if len(roll) > 1:
-                    rolls_completed = 0
-                    while rolls_completed < int(roll[0]):
-                        result = randrange(1, int(roll[1]))
-                        dice_results.append(result)
-                        rolls_completed += 1
-                else:
-                    await channel.send("Heresy!  That's an invalid die type!")
-                    return
+                # if it's a constant, we just add it; else parse as die roll
+                try:
+                    total += int(term)
+                except ValueError:
 
-                output_str = "Roll result: \n ]|["
+                    roll = term.split("d")
 
-                for result in dice_results:
-                    total += result
-                    output_str += " {},".format(result)
+                    if len(roll) > 1:
+                        rolls_completed = 0
 
-                output_str += "]|[\nTotal: {}".format(total)
+                        # Check that inputs are valid
+                        try:
+                            int(roll[0])
+                        except ValueError:
+                            await channel.send("Heresy! '{}' is not a valid number of rolls!".format(roll[0]))
+                            return
+                        try:
+                            int(roll[1])
+                        except ValueError:
+                            await channel.send("Heresy! '{}' is an invalid die type!".format(roll[1]))
+                            return
 
-                await channel.send(output_str)
-                return
+                        while rolls_completed < int(roll[0]):
+                            result = randrange(1, int(roll[1]))
+                            dice_results.append(result)
+                            rolls_completed += 1
+
+            output_str = "Roll result: \n ]|["
+
+            for result in dice_results:
+                total += result
+                output_str += " {},".format(result)
+
+            output_str += "]|[\nTotal: {}".format(total)
+
+            await channel.send(output_str)
+            return
 
 
         elif content.startswith("$exterminatus"):
