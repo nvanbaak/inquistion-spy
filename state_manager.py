@@ -87,7 +87,6 @@ class State_Manager:
 
             self.dice_roller.parse_command(content,channel)
 
-            await channel.send(output_str)
             return
 
 
