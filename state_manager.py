@@ -1,4 +1,5 @@
 import os
+from random import randrange
 import discord
 import config
 
@@ -28,6 +29,15 @@ class State_Manager:
                 # save dict back to file (which removes duplicate entries)
                 self.update_local_aliases()
 
+        # load characters; slightly different process but follows the same logic as aliases
+        if os.path.exists("characters.txt"):
+            with open("characters.txt", "r", -1, "utf8") as char_list:
+                char_list = char_list.read().split("\n")
+
+                # 
+
+                return
+
 
     def update_local_aliases(self):
 
@@ -41,6 +51,12 @@ class State_Manager:
             alias_list.write(alias_str)
 
         return "Updated alias list at alias.txt!"
+
+    def save_cast(self):
+        with open("characters.txt", "w", -1, "uft8") as char_database:
+            char_database.write("Done!")
+        
+        return
 
     # Takes a command, parses it, does the appropriate thing
     async def handle_command(self, message):
@@ -57,15 +73,50 @@ class State_Manager:
             new_guy.generate_characteristics(0)
 
             await channel.send(new_guy.print_stats())
-        
-        if content.startswith("$exterminatus"):
+
+        elif content.startswith("$roll"):
+
+            content = content.replace("$roll ","")
+
+            content = content.split(" ")
+
+            dice_results = []
+            total = 0
+
+
+            for term in content:
+                roll = term.split("d")
+
+                if len(roll) > 1:
+                    rolls_completed = 0
+                    while rolls_completed < int(roll[0]):
+                        result = randrange(1, int(roll[1]))
+                        dice_results.append(result)
+                        rolls_completed += 1
+                else:
+                    await channel.send("Heresy!  That's an invalid die type!")
+                    return
+
+                output_str = "Roll result: \n ]|["
+
+                for result in dice_results:
+                    total += result
+                    output_str += " {},".format(result)
+
+                output_str += "]|[\nTotal: {}".format(total)
+
+                await channel.send(output_str)
+                return
+
+
+        elif content.startswith("$exterminatus"):
             if message.author.id == config.admin_id:
                 await channel.purge()
                 await channel.send("*The channel has been purged.*")
             else:
                 await channel.send("That's heresy!")
 
-        if content.startswith('$register'):
+        elif content.startswith('$register'):
             # retrieve Discord name and given name from message
             author_name = str(message.author.id)
             author_nickname = message.author.name

@@ -1,8 +1,9 @@
 from random import randrange as roll
 
 class Character:
-    def __init__(self, char_name):
+    def __init__(self, char_name, player_name):
         self.name = char_name
+        self.player_name = player_name
         self.char_class = None
     
         self.char_stats = {
