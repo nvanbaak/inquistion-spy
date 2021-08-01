@@ -21,7 +21,7 @@ class Dice_Roller:
         character_check = re.compile("[0-9|d|+|-]*")
         if not character_check.fullmatch(command):
             raise ValueError("Illegal characters")
-        
+
         # Check that all 'd' terms have nonzero adjacent numbers
         zero_rolls_check = re.compile("(^0|[+]0|-0)d")
         d_zeroes_check = re.compile("d(0$|0[+]|0-)")
@@ -35,6 +35,8 @@ class Dice_Roller:
     # mode is 1 for addition and -1 for subtraction
     # roll_results is a reference to a list of roll results
     def ndn_roll(self, roll_code, mode, roll_results):
+        if roll_code.startswith("d"):
+            roll_code = "1" + roll_code
         roll = roll_code.split("d")
 
         if int(roll[0]) > 0 and int(roll[1]) > 0:
@@ -46,7 +48,7 @@ class Dice_Roller:
                 roll_results.append(result * mode)
                 rolls_completed += 1
         else:
-            raise ValueError("Can't roll 0 dice or d0s1")
+            raise ValueError("Can't roll 0 dice or d0s")
         return 
 
     async def parse_roll_term(self, term, mode, roll_results, channel):
