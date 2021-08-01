@@ -86,9 +86,7 @@ class State_Manager:
             content = content.replace("$roll","")
 
             await self.dice_roller.parse_command(content,channel)
-
             return
-
 
         elif content.startswith("$exterminatus"):
             if message.author.id == config.admin_id:
