@@ -106,12 +106,14 @@ class Dice_Roller:
         # set up output
         output_str = "**Roll result:** \n **]|[**"
 
-        for result in dice_results:
-            total += result
-            output_str += " {},".format(result)
+        if dice_results:
+            for result in dice_results:
+                total += result
+                output_str += " {},".format(result)
 
-        # Delete the comma at the end of the list
-        output_str = output_str[:-1]
+                # Delete the comma at the end of the list
+                output_str = output_str[:-1]
+
         output_str += " **]|[**\n**Total:** {}".format(total)
 
         await channel.send(output_str)
