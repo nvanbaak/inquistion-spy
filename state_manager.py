@@ -65,7 +65,7 @@ class State_Manager:
 
     # Takes a command, parses it, does the appropriate thing
     async def handle_command(self, message):
-        
+
         content = message.content
         channel = message.channel
 
@@ -74,7 +74,7 @@ class State_Manager:
             if content == "":
                 content = "New Guy"
 
-            new_guy = Character(content)
+            new_guy = Character(content, "bob")
             new_guy.generate_characteristics(0)
 
             await channel.send(new_guy.print_stats())
