@@ -1,6 +1,8 @@
+from datetime import time
 import os
 from random import randrange
 import discord
+import re
 
 import config
 from dice_engine import Dice_Roller
@@ -78,6 +80,31 @@ class State_Manager:
             new_guy.generate_characteristics(0)
 
             await channel.send(new_guy.print_stats())
+
+        elif content.startswith("$time"):
+            content = content.replace("$time ", "")
+            content = content.replace("$time", "")
+
+            # remove formatting
+            content = content.replace(":", "")
+
+            # run through string until we hit something not a number
+            num_check = re.compile("[0-9]")
+
+            index = 0
+            while index < len(content):
+                if not num_check.fullmatch(content[index]):
+                    break
+                index += 1
+
+            time_value = content[:index]
+            if len(time_value) == 3:
+                time_value = "0" + time_value
+            elif len(time_value) < 3 or len(time_value) > 4:
+                await channel.send("Your time formatting is heretical!  Proper servants of the emperor use three or four digits for times!")
+
+            await channel.send(time_value)
+
 
         elif content.startswith("$roll"):
 
