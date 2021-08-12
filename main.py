@@ -15,6 +15,6 @@ async def on_ready():
 async def on_message(message):
     if message.content.startswith("$"):
         print(message)
-        await sm.handle_command(message)
+        await sm.handle_command(client, message)
 
 client.run(config.bot_token)

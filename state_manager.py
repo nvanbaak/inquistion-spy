@@ -67,7 +67,7 @@ class State_Manager:
         return
 
     # Takes a command, parses it, does the appropriate thing
-    async def handle_command(self, message):
+    async def handle_command(self, client, message):
 
         content = message.content
         channel = message.channel
@@ -99,12 +99,15 @@ class State_Manager:
 
         elif content.startswith("$exterminatus"):
             if message.author.id == config.admin_id:
-                await channel.purge()
-                await channel.send("*The channel has been purged.*")
+                target_number = int(content.split(" ")[1]) + 1 # +1 to also delete the command
+                if target_number:
+                    await channel.purge(limit=target_number, check=self.return_true)
+                    # await channel.send("*The heresy has been purged.*")
             else:
                 await channel.send("That's heresy!")
 
         elif content.startswith('$register'):
+
             # retrieve Discord name and given name from message
             author_name = str(message.author.id)
             author_nickname = message.author.name
@@ -127,3 +130,9 @@ class State_Manager:
 
             else:
                 await message.channel.send("You need to provide a name to use that command.")
+
+    def from_this_guy(self, message, target):
+        return message.author == target
+    
+    def return_true(self, message):
+        return True
