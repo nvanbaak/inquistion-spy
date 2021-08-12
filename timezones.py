@@ -110,6 +110,8 @@ class Time_Manager:
             if minutes >= 60:
                 minutes -= 60
                 time_diff -= 1
+                if minutes < 10:
+                    minutes = "0" + str(minutes)
 
             # insert updated minutes
             time_code = time_code[0:2] + str(minutes) + time_code[4:]
@@ -165,10 +167,13 @@ class Time_Manager:
             minutes = int(time_code[2:4])
             minutes += 30
 
-            # if that's too many minues, reset and decrease the time diff to compensate
+            # if that's too many minues, reset and increase the time diff to compensate
             if minutes >= 60:
                 minutes -= 60
                 time_diff += 1
+
+                if minutes < 10:
+                    minutes = "0" + str(minutes)
 
             # insert updated minutes
             time_code = time_code[0:2] + str(minutes) + time_code[4:]

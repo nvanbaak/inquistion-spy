@@ -99,11 +99,15 @@ class State_Manager:
 
         content = message.content
         channel = message.channel
+        author = self.get_author_name(message.author)
 
         if is_binary:
             translation = self.binary_translator.translate_from_binary(content)
             if translation:
-                output_str = "Scanning binary for heresy:\n\"{}\"\nWe're putting this in your record, {}.".format(translation, message.author.name)
+                output_str = "Scanning binary for heresy:\n\"{}\"\n".format(translation)
+
+                if "emperor" in output_str.lower():
+                    output_str += "\nI see you mentioned the Emperor in your message, {}.  I am too overcome with loyalty to read the rest of the message, but for your sake I hope it was praise.".format(author)
                 await channel.send(output_str)
 
         elif content.startswith("$binary"):
@@ -114,7 +118,7 @@ class State_Manager:
             self.purge_target = message.author
             await channel.purge(limit=1, check=self.from_this_guy)
             self.purge_target = None
-            await channel.send("{} says:\n`{}`".format(message.author.name, binary_text))
+            await channel.send("{} says:\n`{}`".format(author, binary_text))
 
         elif content.startswith("$create"):
             content = content.replace("$create ", "")
@@ -217,3 +221,13 @@ class State_Manager:
     
     def return_true(self, message):
         return True
+
+    # returns a nickname if they have one and their name otherwise
+    def get_author_name(self, author):
+        if author.nick == None:
+            return author.name
+        else:
+            return author.nick
+
+
+
