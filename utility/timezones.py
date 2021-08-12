@@ -47,27 +47,38 @@ class Time_Manager:
                 break
             index += 1
 
-        # check that time code is the proper length
         time_value = content[:index]
-        if len(time_value) == 3:
-            time_value = "0" + time_value
-        elif len(time_value) < 3 or len(time_value) > 4:
-            await channel.send("Your time formatting is heretical!  Proper servants of the emperor use three or four digits for times!")
+        if len(time_value) == 1:
+            time_value = "0{}00".format(time_value)
+        elif len(time_value) == 2:
+            time_value = "{}00".format(time_value)
+        elif len(time_value) == 3:
+            time_value = "0{}".format(time_value)
+        elif len(time_value) > 4:
+            await channel.send("Your time formatting is heretical!  No Emperor-fearing citizen needs more than four numbers for keeping track of time!")
             raise TypeError("Incorrect value for time command")
 
-        # remove spaces between any am/pm designations and their times
-        content = content.replace(" pm ", "pm ")
-        content = content.replace(" am ", "am ")
+        content = time_value + content[index:]
 
-        # if am/pm exists, it's now the next two characters after the time code. If pm, convert to 24-hour time:
+        # remove spaces between any am/pm designations and their times
+        content = content.replace(" pm ", "p ")
+        content = content.replace("pm ", "p ")
+        content = content.replace(" p ", "p ")
+        content = content.replace(" am ", "a ")
+        content = content.replace("am ", "a ")
+        content = content.replace(" a ", "a ")
+
+        # if am/pm exists, it's now the next character after the time code. If pm, convert to 24-hour time:
         hour_format = 24
-        if content[index:index+2] == "pm":
+        if content[4] == "p":
             time_value = str(int(time_value) + 1200)
             hour_format = 12
-        elif content[index:index+2] == "am":
+            separator = ":"
+        elif content[4] == "a":
             hour_format = 12
+            separator = ":"
 
-        # original timezone is the first argument, destination is the second
+        # original timezone is the first argument, destination is the rest
         origin = content.split(" ")[1]
         dest = content.split(" ")[2:]
 
@@ -224,10 +235,6 @@ class Time_Manager:
 
     def format_timecode(self, time_code, hour_format, sep_format):
 
-        # add 0 if the time code's too short; it may get deleted later, but the separator expects two digits for hours 
-        if len(time_code) == 3:
-            time_code = "0" + time_code
-
         tomorrow = yesterday = False
 
         if time_code[-1] == "T":
@@ -237,14 +244,6 @@ class Time_Manager:
         if time_code[-1] == "Y":
             yesterday = True
             time_code = time_code[:-1]
-
-        # add separator
-        if not sep_format == "":
-            time_code = time_code[:2] + sep_format + time_code[2:]
-
-            # then delete leading 0 if one exists
-            if time_code[0] == "0":
-                time_code = time_code[1:]
 
         # if we're using 12-hour time, convert and add am/pm
         if hour_format == 12:
@@ -258,6 +257,14 @@ class Time_Manager:
                 time_code = "12" + time_code[2:] + " am"
             else:
                 time_code = str(hours) + time_code[2:] + " am"
+
+        # add separator
+        if not sep_format == "":
+            time_code = time_code[:2] + sep_format + time_code[2:]
+
+            # then delete leading 0 if one exists
+            if time_code[0] == "0":
+                time_code = time_code[1:]
 
         # flag day rollovers
         if tomorrow:
