@@ -32,7 +32,15 @@ class State_Manager:
                     seal = seal.split("&separator;")
                     if not seal[0] in self.commendations:
                         self.commendations[seal[0]] = 0
-                    self.commendations[seal[0]] += seal[1]
+                    self.commendations[seal[0]] += int(seal[1])
+
+            # add up everyone's totals and rewrite the file
+            new_list = ""
+            for person in self.commendations:
+                new_list += "{}&separator;{}\n".format(person, self.commendations[person])
+
+            with open("commendations.txt", "w", -1, "utf8") as cl:
+                cl.write(new_list)
 
         # load aliases
         self.aliases = {}
@@ -150,12 +158,11 @@ class State_Manager:
             if message.author.id == config.admin_id:
                 content = content.replace("$commend ", "").replace("$commend", "")
 
-                if os.path.exists("commendations.txt"):
-                    with open("commendations.txt", "a", -1, "utf8") as commendations:
+                with open("commendations.txt", "a", -1, "utf8") as commendations:
 
-                        entry = "{}&separator;{}\n".format(content,1)
+                    entry = "{}&separator;{}\n".format(content,1)
 
-                        commendations.write(entry)
+                    commendations.write(entry)
 
                 if not content in self.commendations:
                     self.commendations[content] = 1
@@ -166,7 +173,7 @@ class State_Manager:
                 if self.commendations[content] == 1:
                     plural = ""
 
-                await channel.send('I have awarded a purity seal to {} for their service to the Emperor!  {} has {} purity seal{}.  You can view your purity seals with "$purity `your name`"'.format(content, content, self.commendations[content], plural))
+                await channel.send('I have awarded a purity seal to **{}** for their service to the Emperor!  {} has **{}** purity seal{}.\n\nYou can view your purity seals with "$purity `your name`"'.format(content, content, self.commendations[content], plural))
             else:
                 await channel.send("Heresy!  You do not have the authorization to award purity seals!")
 
