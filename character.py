@@ -13,11 +13,19 @@ class Character:
             "T" : 0,
             "Agi" : 0,
             "Int" : 0,
+            "Per" : 0,
             "Wil" : 0,
             "Fel" : 0
         }
 
-    def generate_characteristics(self, mode):
+        self.skills = []
+
+        self.inventory = []
+
+        self.xp_total = 5000
+        self.xp_spent = 4500
+
+    def generate_characteristics(self, mode=0):
         if mode == "random" or mode == 0:
             for stat in self.char_stats:
                 die_roll = roll(1,11) + roll(1,11)

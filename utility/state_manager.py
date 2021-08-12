@@ -98,6 +98,7 @@ class State_Manager:
         content = message.content
         channel = message.channel
         author = self.get_author_name(message.author)
+        server = message.channel.guild
 
         if is_binary:
             translation = self.binary_translator.translate_from_binary(content)
@@ -127,6 +128,15 @@ class State_Manager:
             new_guy.generate_characteristics(0)
 
             await channel.send(new_guy.print_stats())
+
+        elif content.startswith("$make channel"):
+            content = content.replace("$make channel ", "").replace("$make channel", "")
+
+            if message.author.id == config.admin_id:
+                await self.make_channel(server, content)
+                await message.channel.send("Created new channel {}!".format(content))
+            else:
+                await message.channel.send("*Disgusting* heresy!  You have no right!")
 
         elif content.startswith("$time"):
             content = content.replace("$time ", "")
@@ -224,5 +234,6 @@ class State_Manager:
     def get_author_name(self, author):
         return author.name if author.nick == None else author.nick
 
-
-
+    # creates a new channel
+    async def make_channel(self, server, channel_name, overwrites=None):
+        await server.create_text_channel(channel_name, overwrites=overwrites)
