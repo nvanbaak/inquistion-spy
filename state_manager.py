@@ -108,10 +108,11 @@ class State_Manager:
 
         elif content.startswith("$binary"):
 
-            
+            binary_text = self.binary_translator.to_binary(message)
 
             self.purge_target = message.author
             await channel.purge(limit=1, check=self.from_this_guy)
+            await channel.send("{} says:\n`{}`".format(message.author.name, binary_text))
 
 
         elif content.startswith("$create"):

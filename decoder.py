@@ -100,3 +100,12 @@ class Binary_Translator:
                 output_str += self.from_bin[letter]
 
         return output_str
+    
+    def to_binary(self, message):
+        output_str = ""
+
+        message.split()
+        for letter in message:
+            output_str += self.to_bin[letter] + " "
+
+        return output_str
