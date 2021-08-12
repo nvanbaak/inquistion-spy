@@ -90,11 +90,13 @@ class Binary_Translator:
     def translate_from_binary(self, message):
         # matches any number of 8-digit binary codes with spaces in between
         bin_validity = re.compile("([0|1]{8}[ ]?)*")
+
+        output_str = ""
+
         if bin_validity.fullmatch(message):
 
-            output_str = ""
             message = message.split(" ")
             for letter in message:
                 output_str += self.from_bin[letter]
-            
-            return output_str
+
+        return output_str

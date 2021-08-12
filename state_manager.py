@@ -8,6 +8,7 @@ import re
 import config
 from dice_engine import Dice_Roller
 from timezones import Time_Manager
+from decoder import Binary_Translator
 
 from character import Character
 
@@ -17,6 +18,7 @@ class State_Manager:
         # create instances of utility classes
         self.dice_roller = Dice_Roller()
         self.time_manager = Time_Manager()
+        self.binary_translator = Binary_Translator()
 
         # define binary re
         self.binary_check = re.compile("[0|1| ]*")
@@ -99,8 +101,10 @@ class State_Manager:
         channel = message.channel
 
         if self.binary_check.fullmatch(content):
-            
-            pass
+
+            translation = self.binary_translator.translate_from_binary(content)
+            if translation:
+                await channel.send("Scanning binary for heresy:\n\"{}\"".format(translation))
 
         elif content.startswith("$create"):
             content = content.replace("$create ", "")
