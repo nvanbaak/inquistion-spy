@@ -107,14 +107,14 @@ class State_Manager:
                 await channel.send(output_str)
 
         elif content.startswith("$binary"):
+            content = content.replace("$binary ", "").replace("$binary","")
 
-            binary_text = self.binary_translator.to_binary(message)
+            binary_text = self.binary_translator.to_binary(content)
 
             self.purge_target = message.author
             await channel.purge(limit=1, check=self.from_this_guy)
             self.purge_target = None
             await channel.send("{} says:\n`{}`".format(message.author.name, binary_text))
-
 
         elif content.startswith("$create"):
             content = content.replace("$create ", "")
@@ -200,6 +200,9 @@ class State_Manager:
 
         elif content.startswith("$purity"):
             content = content.replace("$purity ", "").replace("$purity", "")
+
+            if content == config.admin_name:
+                await channel.send("That record is classified.")
 
             try:
                 seals = self.commendations[content]
