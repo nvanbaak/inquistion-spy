@@ -222,10 +222,7 @@ class State_Manager:
 
     # returns a nickname if they have one and their name otherwise
     def get_author_name(self, author):
-        if author.nick == None:
-            return author.name
-        else:
-            return author.nick
+        return author.name if author.nick == None else author.nick
 
 
 
