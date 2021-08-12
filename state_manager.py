@@ -20,9 +20,6 @@ class State_Manager:
         self.time_manager = Time_Manager()
         self.binary_translator = Binary_Translator()
 
-        # define binary re
-        self.binary_check = re.compile("[0|1| ]*")
-
         # load commendations
         self.commendations = {}
         if os.path.exists("commendations.txt"):
@@ -75,6 +72,9 @@ class State_Manager:
 
                 return
 
+        # variable used for message deletion
+        self.purge_target = None
+
     def update_local_aliases(self):
 
         # Make a string out of alias dict
@@ -95,16 +95,24 @@ class State_Manager:
         return
 
     # Takes a command, parses it, does the appropriate thing
-    async def handle_command(self, client, message):
+    async def handle_command(self, client, message, is_binary):
 
         content = message.content
         channel = message.channel
 
-        if self.binary_check.fullmatch(content):
-
+        if is_binary:
             translation = self.binary_translator.translate_from_binary(content)
             if translation:
-                await channel.send("Scanning binary for heresy:\n\"{}\"".format(translation))
+                output_str = "Scanning binary for heresy:\n\"{}\"\nWe're putting this in your record, {}.".format(translation, message.author.name)
+                await channel.send(output_str)
+
+        elif content.startswith("$binary"):
+
+            
+
+            self.purge_target = message.author
+            await channel.purge(limit=1, check=self.from_this_guy)
+
 
         elif content.startswith("$create"):
             content = content.replace("$create ", "")
@@ -199,9 +207,8 @@ class State_Manager:
             
             await channel.send("The loyal servant of the Emperor **{}** has been graced with **{}** purity seals.  A great honor!".format(content, seals))
 
-
-    def from_this_guy(self, message, target):
-        return message.author == target
+    def from_this_guy(self, message):
+        return message.author == self.purge_target
     
     def return_true(self, message):
         return True
