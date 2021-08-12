@@ -1,5 +1,6 @@
 from datetime import time
 import os
+from posixpath import expanduser
 from random import randrange
 import discord
 import re
@@ -17,10 +18,24 @@ class State_Manager:
         self.dice_roller = Dice_Roller()
         self.time_manager = Time_Manager()
 
-        # alias setup
-        self.aliases = {}
+        # load commendations
+        self.commendations = {}
+        if os.path.exists("commendations.txt"):
+            with open("commendations.txt", "r", -1, "utf8") as commendation_list:
+                purity_seals = commendation_list.read().split("\n")
 
-        # load any existing aliases
+                # last entry is empty, so we kill it
+                del purity_seals[-1]
+
+                # add up everyone's purity seals
+                for seal in purity_seals:
+                    seal = seal.split("&separator;")
+                    if not seal[0] in self.commendations:
+                        self.commendations[seal[0]] = 0
+                    self.commendations[seal[0]] += seal[1]
+
+        # load aliases
+        self.aliases = {}
         if os.path.exists("alias.txt"):
             with open("alias.txt", "r", -1, "utf8") as alias_list:
                 alias_data = alias_list.read().split("\n")
@@ -38,7 +53,7 @@ class State_Manager:
                 # save dict back to file (which removes duplicate entries)
                 self.update_local_aliases()
 
-        # load characters; slightly different process but follows the same logic as aliases
+        # load characters
         if os.path.exists("characters.txt"):
             with open("characters.txt", "r", -1, "utf8") as char_list:
                 char_list = char_list.read().split("\n")
@@ -130,6 +145,42 @@ class State_Manager:
 
             else:
                 await message.channel.send("You need to provide a name to use that command.")
+
+        elif content.startswith("$commend"):
+            if message.author.id == config.admin_id:
+                content = content.replace("$commend ", "").replace("$commend", "")
+
+                if os.path.exists("commendations.txt"):
+                    with open("commendations.txt", "a", -1, "utf8") as commendations:
+
+                        entry = "{}&separator;{}\n".format(content,1)
+
+                        commendations.write(entry)
+
+                if not content in self.commendations:
+                    self.commendations[content] = 1
+                else:
+                    self.commendations[content] += 1
+
+                plural = "s"
+                if self.commendations[content] == 1:
+                    plural = ""
+
+                await channel.send('I have awarded a purity seal to {} for their service to the Emperor!  {} has {} purity seal{}.  You can view your purity seals with "$purity `your name`"'.format(content, content, self.commendations[content], plural))
+            else:
+                await channel.send("Heresy!  You do not have the authorization to award purity seals!")
+
+        elif content.startswith("$purity"):
+            content = content.replace("$purity ", "").replace("$purity", "")
+
+            try:
+                seals = self.commendations[content]
+            except KeyError:
+                await channel.send("{} does not have any purity seals.  Increase your devotion to the Emperor!").format(content)
+                return
+            
+            await channel.send("The loyal servant of the Emperor **{}** has been graced with **{}** purity seals.  A great honor!".format(content, seals))
+
 
     def from_this_guy(self, message, target):
         return message.author == target
