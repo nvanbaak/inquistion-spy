@@ -4,9 +4,9 @@ import discord
 import re
 
 import config
-from dice_engine import Dice_Roller
-from timezones import Time_Manager
-from decoder import Binary_Translator
+from utility.dice_engine import Dice_Roller
+from utility.timezones import Time_Manager
+from utility.decoder import Binary_Translator
 
 from character import Character
 
@@ -20,8 +20,8 @@ class State_Manager:
 
         # load commendations
         self.commendations = {}
-        if os.path.exists("commendations.txt"):
-            with open("commendations.txt", "r", -1, "utf8") as commendation_list:
+        if os.path.exists("data/commendations.txt"):
+            with open("data/commendations.txt", "r", -1, "utf8") as commendation_list:
                 purity_seals = commendation_list.read().split("\n")
 
                 # last entry is empty, so we kill it
@@ -39,13 +39,13 @@ class State_Manager:
             for person in self.commendations:
                 new_list += "{}&separator;{}\n".format(person, self.commendations[person])
 
-            with open("commendations.txt", "w", -1, "utf8") as cl:
+            with open("data/commendations.txt", "w", -1, "utf8") as cl:
                 cl.write(new_list)
 
         # load aliases
         self.aliases = {}
-        if os.path.exists("alias.txt"):
-            with open("alias.txt", "r", -1, "utf8") as alias_list:
+        if os.path.exists("data/alias.txt"):
+            with open("data/alias.txt", "r", -1, "utf8") as alias_list:
                 alias_data = alias_list.read().split("\n")
 
                 # delete the newline at the end
@@ -62,8 +62,8 @@ class State_Manager:
                 self.update_local_aliases()
 
         # load characters
-        if os.path.exists("characters.txt"):
-            with open("characters.txt", "r", -1, "utf8") as char_list:
+        if os.path.exists("data/characters.txt"):
+            with open("data/characters.txt", "r", -1, "utf8") as char_list:
                 char_list = char_list.read().split("\n")
 
                 # 
@@ -81,13 +81,13 @@ class State_Manager:
             alias_str += "{account}&separator;{alias}\n".format(account=key, alias=self.aliases[key])
 
         # save to file
-        with open("alias.txt","w",-1,"utf8") as alias_list:
+        with open("data/alias.txt","w",-1,"utf8") as alias_list:
             alias_list.write(alias_str)
 
         return "Updated alias list at alias.txt!"
 
     def save_cast(self):
-        with open("characters.txt", "w", -1, "uft8") as char_database:
+        with open("data/characters.txt", "w", -1, "uft8") as char_database:
             char_database.write("Done!")
         
         return

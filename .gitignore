@@ -133,3 +133,4 @@ config.py
 alias.txt
 characters.txt
 commendations.txt
+data/
