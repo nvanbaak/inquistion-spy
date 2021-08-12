@@ -235,14 +235,11 @@ class Time_Manager:
 
     def format_timecode(self, time_code, hour_format, sep_format):
 
-        tomorrow = yesterday = False
+        # parse and remove day rollover flags
+        tomorrow = time_code[-1] == "T"
+        yesterday = time_code[-1] == "Y"
 
-        if time_code[-1] == "T":
-            tomorrow = True
-            time_code = time_code[:-1]
-
-        if time_code[-1] == "Y":
-            yesterday = True
+        if tomorrow or yesterday:
             time_code = time_code[:-1]
 
         # if we're using 12-hour time, convert and add am/pm
@@ -258,7 +255,7 @@ class Time_Manager:
             else:
                 time_code = str(hours) + time_code[2:] + " am"
 
-        # add separator
+        # insert separator after the hour digits
         if not sep_format == "":
             time_code = time_code[:2] + sep_format + time_code[2:]
 
@@ -266,7 +263,7 @@ class Time_Manager:
             if time_code[0] == "0":
                 time_code = time_code[1:]
 
-        # flag day rollovers
+        # add rollover notification
         if tomorrow:
             time_code += " (next day)"
         if yesterday:
