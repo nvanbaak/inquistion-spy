@@ -1,7 +1,5 @@
 from datetime import time
 import os
-from posixpath import expanduser
-from random import randrange
 import discord
 import re
 

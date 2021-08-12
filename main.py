@@ -3,7 +3,7 @@ import config
 import re
 
 from character import Character
-from state_manager import State_Manager
+from utility.state_manager import State_Manager
 
 client = discord.Client()
 sm = State_Manager()
