@@ -1,3 +1,4 @@
+from datetime import time
 import re
 import discord
 
@@ -7,6 +8,9 @@ class Time_Manager:
         self.tz_dict = {
             "utc" : 0,
             "gmt" : 0,
+            "ist" : 5.5,
+            "cest" : 2,
+            "eet" : 2,
             "edt" : -4,
             "est" : -5,
             "cdt" : -5,
@@ -19,10 +23,20 @@ class Time_Manager:
 
     async def parse_command(self, content, channel):
 
-        # remove colons and extra spaces
-        content = content.replace(":", "").lower()
+        # remove extra spaces
         while "  " in content:
             content = content.replace("  ", " ")
+
+        # check if the seperator is ":"" or "h"
+        separator = ""
+        if ":" in content:
+            separator = ":"
+            content = content.replace(":", "").lower()
+        if "h" in content.split(" ", 1)[0]:
+            separator = "h"
+            content = content.replace("h", "", 1).lower()
+        else:
+            content = content.lower()
 
         # run through string until we hit something not a number
         num_check = re.compile("[0-9]")
@@ -46,8 +60,12 @@ class Time_Manager:
         content = content.replace(" am ", "am ")
 
         # if am/pm exists, it's now the next two characters after the time code. If pm, convert to 24-hour time:
+        hour_format = 24
         if content[index:index+2] == "pm":
             time_value = str(int(time_value) + 1200)
+            hour_format = 12
+        elif content[index:index+2] == "am":
+            hour_format = 12
 
         # original timezone is the first argument, destination is the second
         origin = content.split(" ")[1]
@@ -55,8 +73,8 @@ class Time_Manager:
 
         converted_time = self.translate_timezones(time_value, origin, dest)
 
-        time_value = self.format_timecode(time_value)
-        new_time = self.format_timecode(converted_time)
+        time_value = self.format_timecode(time_value, hour_format, separator)
+        new_time = self.format_timecode(converted_time, hour_format, separator)
 
         output = "{} {} is **{} {}**".format(time_value, origin.upper(), new_time, dest.upper())
 
@@ -70,15 +88,35 @@ class Time_Manager:
         return converted_time
 
     def utc(self, time_code, tz_code):
-        if time_code == "utc" or time_code == "gmt":
+        if tz_code == "utc" or tz_code == "gmt":
             return time_code
 
-        hours = time_code[:2]
+        hours = int(time_code[:2])
         yesterday = False
         tomorrow = False
 
-        in_utc = int(hours) - self.tz_dict[tz_code]
+        time_diff = self.tz_dict[tz_code]
 
+        # check for half-hour differences
+        if not isinstance(time_diff, int):
+            # round up to an hour
+            time_diff = int(time_diff + 0.5)
+            
+            # add half an hour to the time code
+            minutes = int(time_code[2:4])
+            minutes += 30
+
+            # if that's too many minues, reset and decrease the time diff to compensate
+            if minutes >= 60:
+                minutes -= 60
+                time_diff -= 1
+
+            # insert updated minutes
+            time_code = time_code[0:2] + str(minutes) + time_code[4:]
+
+        in_utc = hours - time_diff
+
+        # check rollover
         if in_utc < 0:
             in_utc += 24
             yesterday = True
@@ -87,44 +125,123 @@ class Time_Manager:
             in_utc -= 24
             tomorrow = True
 
+        if in_utc < 10:
+            in_utc = "0" + str(in_utc)
+
         new_time = str(in_utc) + time_code[2:]
+
+        if tomorrow:
+            new_time += "T"
+        if yesterday:
+            new_time += "Y"
 
         return new_time
 
     def un_utc(self, time_code, tz_code):
-        if time_code == "utc" or time_code == "gmt":
+        if tz_code == "utc" or tz_code == "gmt":
             return time_code
 
-        hours = time_code[:2]
+        hours = int(time_code[:2])
         yesterday = False
         tomorrow = False
 
-        not_utc = int(hours) + self.tz_dict[tz_code]
+        # check if the utc function left a day flag; if so, delete it and update the booleans
+        if time_code[-1] == "T":
+            tomorrow = True
+            time_code = time_code[:-1]
+
+        if time_code[-1] == "Y":
+            yesterday = True
+            time_code = time_code[:-1]
+
+        time_diff = self.tz_dict[tz_code]
+
+        # check for half-hour differences
+        if not isinstance(time_diff, int):
+            # round down to an hour
+            time_diff = int(time_diff - 0.5)
+            
+            # add half an hour to the time code
+            minutes = int(time_code[2:4])
+            minutes += 30
+
+            # if that's too many minues, reset and decrease the time diff to compensate
+            if minutes >= 60:
+                minutes -= 60
+                time_diff += 1
+
+            # insert updated minutes
+            time_code = time_code[0:2] + str(minutes) + time_code[4:]
+
+        not_utc = hours + time_diff
 
         if not_utc < 0:
             not_utc += 24
-            yesterday = True
+            if tomorrow:
+                tomorrow = False
+            else:
+                yesterday = True
 
         if not_utc >= 24:
             not_utc -= 24
-            tomorrow = True
+            if yesterday:
+                yesterday = False
+            else:
+                tomorrow = True
+
+        if not_utc < 10:
+            not_utc = "0" + str(not_utc)
 
         new_time = str(not_utc) + time_code[2:]
 
+        if tomorrow:
+            new_time += "T"
+        if yesterday:
+            new_time += "Y"
+
         return new_time
 
-    def format_timecode(self, time_code):
+    def format_timecode(self, time_code, hour_format, sep_format):
 
+        # add 0 if the time code's too short; it may get deleted later, but the separator expects two digits for hours 
         if len(time_code) == 3:
             time_code = "0" + time_code
 
-        # add colon
-        time_code = time_code[:2] + ":" + time_code[2:]
+        tomorrow = yesterday = False
 
-        # convert 24 to 12
-        hours = int(time_code[:2])
-        if hours > 12:
-            hours -= 12
-        time_code = str(hours) + time_code[2:] + " pm"
+        if time_code[-1] == "T":
+            tomorrow = True
+            time_code = time_code[:-1]
+
+        if time_code[-1] == "Y":
+            yesterday = True
+            time_code = time_code[:-1]
+
+        # add separator
+        if not sep_format == "":
+            time_code = time_code[:2] + sep_format + time_code[2:]
+
+            # then delete leading 0 if one exists
+            if time_code[0] == "0":
+                time_code = time_code[1:]
+
+        # if we're using 12-hour time, convert and add am/pm
+        if hour_format == 12:
+            hours = int(time_code[:2])
+            if hours > 12:
+                hours -= 12
+                time_code = str(hours) + time_code[2:] + " pm"
+            elif hours == 12:
+                time_code = "12" + time_code[2:] + " pm"
+            elif hours == 0:
+                time_code = "12" + time_code[2:] + " am"
+            else:
+                time_code = str(hours) + time_code[2:] + " am"
+
+        # flag day rollovers
+        if tomorrow:
+            time_code += " (next day)"
+        if yesterday:
+            time_code += " (previous day)"
 
         return time_code
