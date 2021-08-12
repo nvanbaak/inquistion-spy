@@ -6,14 +6,16 @@ import re
 
 import config
 from dice_engine import Dice_Roller
+from timezones import Time_Manager
 
 from character import Character
 
 class State_Manager:
     def __init__(self):
 
-        # create dice roller instance
+        # create instances of utility classes
         self.dice_roller = Dice_Roller()
+        self.time_manager = Time_Manager()
 
         # alias setup
         self.aliases = {}
@@ -44,7 +46,6 @@ class State_Manager:
                 # 
 
                 return
-
 
     def update_local_aliases(self):
 
@@ -85,39 +86,7 @@ class State_Manager:
             content = content.replace("$time ", "")
             content = content.replace("$time", "")
 
-            # remove formatting
-            content = content.replace(":", "")
-
-            # run through string until we hit something not a number
-            num_check = re.compile("[0-9]")
-
-            index = 0
-            while index < len(content):
-                if not num_check.fullmatch(content[index]):
-                    break
-                index += 1
-
-            time_value = content[:index]
-            if len(time_value) == 3:
-                time_value = "0" + time_value
-            elif len(time_value) < 3 or len(time_value) > 4:
-                await channel.send("Your time formatting is heretical!  Proper servants of the emperor use three or four digits for times!")
-                return
-
-            content_no_spaces = content.replace(" ", "")
-
-            # if there's an am or pm designation, update time accordingly
-            time_code = content_no_spaces[index:index+2]
-            if time_code.lower() == "am":
-                content_no_spaces = content_no_spaces[index+2:]
-            elif time_code.lower() == "pm":
-                time_value = int(time_value) + 1200
-                content_no_spaces = content_no_spaces[index+2:]
-
-            
-
-            await channel.send(time_code)
-
+            await self.time_manager.parse_command(content, channel)
 
         elif content.startswith("$roll"):
 
