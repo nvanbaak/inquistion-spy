@@ -18,6 +18,9 @@ class State_Manager:
         self.dice_roller = Dice_Roller()
         self.time_manager = Time_Manager()
 
+        # define binary re
+        self.binary_check = re.compile("[0|1| ]*")
+
         # load commendations
         self.commendations = {}
         if os.path.exists("commendations.txt"):
@@ -95,7 +98,11 @@ class State_Manager:
         content = message.content
         channel = message.channel
 
-        if content.startswith("$create"):
+        if self.binary_check.fullmatch(content):
+            
+            pass
+
+        elif content.startswith("$create"):
             content = content.replace("$create ", "")
             if content == "":
                 content = "New Guy"
