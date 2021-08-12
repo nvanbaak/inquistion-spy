@@ -1,7 +1,5 @@
-from datetime import time
 import os
 import discord
-import re
 
 import config
 from utility.dice_engine import Dice_Roller
@@ -165,27 +163,25 @@ class State_Manager:
         elif content.startswith('$register'):
 
             # retrieve Discord name and given name from message
-            author_name = str(message.author.id)
-            author_nickname = message.author.name
-            content = content.replace("$register ","")
-            content = content.replace("$register","")
+            author_id = str(message.author.id)
+            content = content.replace("$register ","").replace("$register","")
             alias = content
 
-            if alias:
-                # set that value in the alias list
-                self.aliases[author_name] = alias
-                
-                alias_str = "{author_name}&separator;{alias}\n".format(author_name=author_name, alias=alias)
+            # if they don't provide a name, use their nickname
+            if not alias:
+                alias = author
 
-                # save alias to alias list
-                with open("alias.txt", "a", -1, "utf8") as alias_list:
-                    alias_list.write(alias_str)
+            # set that value in the alias list
+            self.aliases[author_id] = alias
+            
+            alias_str = "{}&separator;{}\n".format(author_id, alias)
 
-                # confirmation message
-                await message.channel.send("Registered {author} as {alias}!".format(author=author_nickname, alias=alias))
+            # save alias to alias list
+            with open("data/alias.txt", "a", -1, "utf8") as alias_list:
+                alias_list.write(alias_str)
 
-            else:
-                await message.channel.send("You need to provide a name to use that command.")
+            # confirmation message
+            await message.channel.send("Registered {} as {}!".format(author, alias))
 
         elif content.startswith("$commend"):
             if message.author.id == config.admin_id:
