@@ -69,16 +69,32 @@ class Time_Manager:
 
         # original timezone is the first argument, destination is the second
         origin = content.split(" ")[1]
-        dest = content.split(" ")[2]
+        dest = content.split(" ")[2:]
 
-        converted_time = self.translate_timezones(time_value, origin, dest)
+        formatted_time = self.format_timecode(time_value, hour_format, separator)
 
-        time_value = self.format_timecode(time_value, hour_format, separator)
-        new_time = self.format_timecode(converted_time, hour_format, separator)
+        output_str = "{} {} is: \n - ".format(formatted_time, origin.upper())
 
-        output = "{} {} is **{} {}**".format(time_value, origin.upper(), new_time, dest.upper())
+        # if there's just one destination, we make it one line and delete the colon
+        if len(dest) == 1:
+            output_str = output_str[:-6] + " "
 
-        await channel.send(output)
+        for tz in dest:
+            try:
+                converted_time = self.translate_timezones(time_value, origin, tz)
+
+                new_time = self.format_timecode(converted_time, hour_format, separator)
+
+                output_str += "{} {} \n - ".format(new_time, tz.upper())
+
+            except KeyError:
+                await channel.send("Heresy!  I don't recognize the time zone \"{}\".  Please report this oversight to the Administratum.".format(tz))
+                return
+
+        # when we're done, there's a hanging bullet point, so let's clean that up
+        output_str = output_str[:-5]
+
+        await channel.send(output_str)
 
     def translate_timezones(self, time_value, origin, dest):
 
