@@ -112,6 +112,7 @@ class State_Manager:
 
             self.purge_target = message.author
             await channel.purge(limit=1, check=self.from_this_guy)
+            self.purge_target = None
             await channel.send("{} says:\n`{}`".format(message.author.name, binary_text))
 
 
