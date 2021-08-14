@@ -18,7 +18,7 @@ class Dice_Roller:
             raise TypeError("Empty argument")
 
         # Check that no illegal characters are used
-        character_check = re.compile("[0-9|d|+|-]*")
+        character_check = re.compile("[0-9d+-]*")
         if not character_check.fullmatch(command):
             raise ValueError("Illegal characters")
 

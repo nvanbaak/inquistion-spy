@@ -117,6 +117,9 @@ class State_Manager:
             self.purge_target = None
             await channel.send("{} says:\n`{}`".format(author, binary_text))
 
+        elif content.startswith("$env"):
+            await channel.send("I am currently running from `" + config.env + "`.")
+
         elif content.startswith("$create"):
             content = content.replace("$create ", "")
             if content == "":
@@ -205,6 +208,29 @@ class State_Manager:
                 await channel.send('I have awarded a purity seal to **{}** for their service to the Emperor!  {} has **{}** purity seal{}.\n\nYou can view your purity seals with "$purity `your name`"'.format(content, content, self.commendations[content], plural))
             else:
                 await channel.send("Heresy!  You do not have the authorization to award purity seals!")
+
+        elif content.startswith("$demerit"):
+            if message.author.id == config.admin_id:
+                content = content.replace("$commend ", "").replace("$commend", "")
+
+                with open("commendations.txt", "a", -1, "utf8") as commendations:
+
+                    entry = "{}&separator;{}\n".format(content,1)
+
+                    commendations.write(entry)
+
+                if not content in self.commendations:
+                    self.commendations[content] = 1
+                else:
+                    self.commendations[content] += 1
+
+                plural = "s"
+                if self.commendations[content] == 1:
+                    plural = ""
+
+                await channel.send('I have awarded a purity seal to **{}** for their service to the Emperor!  {} has **{}** purity seal{}.\n\nYou can view your purity seals with "$purity `your name`"'.format(content, content, self.commendations[content], plural))
+            else:
+                await channel.send("Heresy!  You do not have the authorization to revoke purity seals!")
 
         elif content.startswith("$purity"):
             content = content.replace("$purity ", "").replace("$purity", "")

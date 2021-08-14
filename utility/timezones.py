@@ -235,6 +235,9 @@ class Time_Manager:
 
     def format_timecode(self, time_code, hour_format, sep_format):
 
+        if len(time_code) == 3:
+            time_code = "0" + time_code
+
         # parse and remove day rollover flags
         tomorrow = time_code[-1] == "T"
         yesterday = time_code[-1] == "Y"
