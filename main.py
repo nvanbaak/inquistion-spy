@@ -11,7 +11,7 @@ class MyClient(discord.Client):
         self.sm = State_Manager()
 
         self.binary_check = re.compile("[0-1| ]*")
-        self.env = config.env
+        self.active_env = config.env
         self.muted = False
     
     async def on_ready(self):
@@ -19,16 +19,22 @@ class MyClient(discord.Client):
 
     async def on_message(self, message):
         # this code lets us have multiple instances of the bot running, but choose which one responds for debugging purposes
-        if message.content.startswith("$set env "):
+        if message.content.startswith("$set env ") and message.author.id == config.admin_id:
+            print(message.content)
 
-            self.muted = self.env == config.env
-            self.env = message.content.replace("$set env", "").replace(" ", "")
+            self.active_env = message.content.replace("$set env", "").replace(" ", "")
 
-            if self.muted and self.env != config.env:
-                await message.channel.send("- Muting {}.".format(config.env))
+            # if we're already active:
+            if not self.muted and self.active_env == config.env:
+                await message.channel.send ("`{}` is already the active environment.".format(config.env))
 
-            elif not self.muted and self.env == config.env:
-                await message.channel.send("- Unmuting {}.".format(config.env))
+            if not self.muted and self.active_env != config.env:
+                await message.channel.send("- Muting `{}`.".format(config.env))
+                self.muted = True
+
+            elif self.muted and self.active_env == config.env:
+                await message.channel.send("- Unmuting `{}`.".format(config.env))
+                self.muted = False
             return
 
         if not self.muted:
