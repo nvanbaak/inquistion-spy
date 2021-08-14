@@ -258,6 +258,12 @@ class Time_Manager:
             else:
                 time_code = str(hours) + time_code[2:] + " am"
 
+            # add a leading 0 if it got lost
+            if len(time_code) == 6:
+                time_code = "0" + time_code
+
+        print(time_code)
+
         # insert separator after the hour digits
         if not sep_format == "":
             time_code = time_code[:2] + sep_format + time_code[2:]
